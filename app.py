@@ -15,7 +15,7 @@ app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui' #protege a sessão dos usuá
 
 # Configuração do Banco de Dados SQLite: defini onde o arquivo banco.db é criado
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'instance', 'banco.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'banco.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Pasta para upload(para armazenar fotos dos produtos/itens,tradando possíveis conflitos) de imagens (Com tratamento seguro para evitar conflitos no Windows)
