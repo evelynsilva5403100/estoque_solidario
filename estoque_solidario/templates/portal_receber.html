@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Recebimento - Estoque Solidário</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        .object-fit-cover {
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+    <!-- Topo moderno padronizado igual às outras páginas -->
+    <div class="d-flex flex-column justify-content-start align-items-start position-relative topo-moderno">
+        
+        <div class="position-absolute d-flex align-items-center gap-4 menu-topo flex-wrap justify-content-end" style="top: 25px; right: 5%;">
+            <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('sobre') }}">Sobre Nós</a>
+            <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('index') }}#vitrine-suprimentos">Itens Disponíveis</a>
+            
+            {% if current_user.is_authenticated %}
+                {% if current_user.tipo == 'mercado' %}
+              <a class="nav-link text-success-dark fw-semibold position-relative" href="{{ url_for('pedidos.meus_pedidos') }}">
+                Pedidos Recebidos
+               {% if contagem_novos_pedidos and contagem_novos_pedidos > 0 %}
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger badge-alerta-pisca">
+                {{ contagem_novos_pedidos }}
+                 </span>
+                 {% endif %}
+                </a>
+                 <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('doacoes.minhas_doacoes') }}">Meus Itens</a>
+                {% else %}
+                 <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('pedidos.meus_pedidos') }}">Meus Pedidos</a>
+                {% endif %}
+
+                <a href="{{ url_for('perfil') }}" class="btn btn-outline-success-custom btn-sm rounded-pill px-3 fw-semibold">
+                    <span class="me-1">👤</span>{{ current_user.username }}
+                </a>
+                
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Sair</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="nav-link text-success-dark fw-semibold">Login</a>
+                <a href="{{ url_for('auth.cadastrar') }}" class="btn btn-success-custom fw-bold px-4 py-2 rounded-pill">Registrar-se</a>
+            {% endif %}
+        </div>
+        
+        <div class="text-start mt-0 pt-0 contentor-logo">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='14694.jpeg') }}" alt="Logo Estoque Solidário" class="logo-grande">
+            </a>
+        </div>
+    </div>
+
+    <div class="faixa-verde shadow-sm text-center" style="height: 4px; min-height: 4px; padding: 0;"></div>
+
+    <!-- Mensagens Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="container mt-4">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Conteúdo Principal -->
+    <div class="container my-5 flex-grow-1">
+        {% if current_user.is_authenticated %}
+            <div class="text-center mb-5">
+                <h2 class="text-success-dark fw-extrabold">Suprimentos Disponíveis para Retirada</h2>
+                <p class="text-muted fs-5">Use o campo abaixo para buscar itens ou filtrar por cidade.</p>
+                
+                <form method="GET" action="{{ url_for('portal_receber') if 'portal_receber' in endpoints else url_for('index') }}" class="d-flex justify-content-center mt-4">
+                    <div class="input-group shadow-sm" style="max-width: 600px; border-radius: 30px; overflow: hidden; border: 1px solid #dee2e6;">
+                        <input type="text" name="busca" class="form-control border-0 px-4" placeholder="Buscar por item ou cidade..." value="{{ request.args.get('busca', '') }}">
+                        <button class="btn btn-success-custom fw-bold px-4" type="submit">Buscar</button>
+                        {% if request.args.get('busca') %}
+                            <a href="{{ url_for('index') }}" class="btn btn-light border-start d-flex align-items-center justify-content-center px-3 text-secondary">Limpar</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            <!-- Lista de Itens -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+              {% for item in itens %}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm border-0 card-item-entrega bg-white position-relative" style="border-radius: 20px; overflow: hidden;">
+                            
+                            <!-- Topo do card (Imagem e Badge de Validade) -->
+                            <div class="imagem-container bg-light d-flex justify-content-center align-items-center position-relative" style="height: 220px; overflow: hidden;">
+                                {% if item.imagem and item.imagem != 'sem-foto.png' and item.imagem != '' %}
+                                    <img src="{{ url_for('static', filename='uploads/' + item.imagem) }}" alt="{{ item.nome }}" class="w-100 h-100 object-fit-cover">
+                                {% else %}
+                                    <img src="{{ url_for('static', filename='sem-foto.png') }}" alt="Sem imagem" class="w-100 h-100 object-fit-cover">
+                                {% endif %}
+                                     
+                                {% set dias = item.dias_restantes if item.dias_restantes is defined else (dias_restantes(item.validade) if dias_restantes else 999) %}
+                                <div class="position-absolute z-3" style="top: 15px; left: 15px;">
+                                    {% if item.categoria != 'Alimento' or dias == 999 %}
+                                        <span class="badge bg-secondary shadow-sm px-3 py-2 text-white" style="border-radius: 30px; font-weight: bold;">📦 Não perecível</span>
+                                    {% elif dias < 0 %}
+                                        <span class="badge bg-dark shadow-sm px-3 py-2 text-white" style="border-radius: 30px; font-weight: bold;">❌ Vencido</span>
+                                    {% elif dias == 0 %}
+                                        <span class="badge bg-danger shadow-sm px-3 py-2 text-white" style="border-radius: 30px; font-weight: bold;">🚨 Vence Hoje!</span>
+                                    {% elif dias == 1 %}
+                                        <span class="badge bg-danger shadow-sm px-3 py-2 text-white" style="border-radius: 30px; font-weight: bold;">🔴 Vence Amanhã!</span>
+                                    {% elif dias <= 3 %}
+                                        <span class="badge bg-danger shadow-sm px-3 py-2 text-white" style="border-radius: 30px; font-weight: bold;">🔴 Restam {{ dias }} dias</span>
+                                    {% elif dias <= 7 %}
+                                        <span class="badge bg-warning shadow-sm px-3 py-2 text-dark" style="border-radius: 30px; font-weight: bold;">🟡 Restam {{ dias }} dias</span>
+                                    {% else %}
+                                        <span class="badge bg-success shadow-sm px-3 py-2 text-white" style="border-radius: 30px; font-weight: bold;">🟢 Seguro ({{ dias }} dias)</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="card-body d-flex flex-column p-4">
+                                
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h4 class="card-title text-success-dark fw-extrabold m-0 pe-2 fs-2" style="word-break: break-word;">{{ item.nome or item.item }}</h4>
+                                    <span class="badge bg-success-subtle text-success-dark px-3 py-2 text-nowrap" style="border-radius: 30px; font-weight: 700; font-size: 0.85rem; border: 1px solid #cce8d5;">
+                                        {{ item.qtd }} {{ item.unidade or 'unid' }}
+                                    </span>
+                                </div>
+                                
+                                <div class="card-text flex-grow-1 mb-4 text-start" style="font-size: 0.95rem; color: #555555; line-height: 1.6;">
+                                    
+                                    <div class="p-3 mb-3 bg-light rounded-4 border border-light-subtle" style="font-size: 0.9rem;">
+                                        <p class="mb-1">🏪 <strong>Estabelecimento:</strong> {{ item.usuario.username if item.usuario else 'Doador' }}</p>
+                                        <p class="mb-0">🤝 <strong>Doador/Responsável:</strong> 
+                                            {% if item.usuario and item.usuario.nome_real %}
+                                                {{ item.usuario.nome_real }}
+                                            {% else %}
+                                                Não cadastrado
+                                            {% endif %}
+                                        </p>
+                                    </div>
+
+                                    {% if item.categoria == 'Alimento' and item.validade %}
+                                        <p class="mb-1">
+                                            <strong>Validade:</strong> 
+                                            <span class="fw-bold">
+                                                {{ item.validade[8:10] }}/{{ item.validade[5:7] }}/{{ item.validade[0:4] }}
+                                            </span>
+                                        </p>   
+                                    {% endif %}
+                                    <p class="mb-1">📍 <strong>Cidade:</strong> {{ item.cidade }}</p>
+                                    <p class="mb-1">🏡 <strong>Bairro:</strong> {{ item.bairro }}</p>
+                                    <p class="mb-0">🗺️ <strong>Endereço:</strong> {{ item.rua_numero }}</p>
+                                </div>
+                                
+                                <div class="mt-auto">
+                                    <form action="{{ url_for('pedidos.solicitar', item_id=item.id) }}" method="POST" class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="text-muted fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">RETIRAR QUANTIDADE:</span>
+                                            <div class="input-group" style="width: 120px;">
+                                                <input 
+                                                    type="number" 
+                                                    name="qtd_solicitada" 
+                                                    value="1" 
+                                                    min="1" 
+                                                    max="{{ item.qtd }}" 
+                                                    class="form-control text-center fw-bold" 
+                                                    style="border-radius: 8px 0 0 8px; border: 1.5px solid #dee2e6; height: 38px;"
+                                                    required
+                                                >
+                                                <span class="input-group-text bg-light text-muted fw-semibold" style="font-size: 0.75rem; border: 1.5px solid #dee2e6; border-left: none; border-radius: 0 8px 8px 0;">
+                                                    {{ item.unidade or 'un' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-success-custom w-100 fw-bold py-2 shadow-sm" style="border-radius: 30px; font-size: 0.9rem;">
+                                            Confirmar Reserva
+                                        </button>
+                                    </form>
+                                    
+                                    <div class="text-center pt-2 border-top">
+                                        <p class="mb-2 text-muted" style="font-size: 0.8rem; font-weight: 500;">Combine a retirada com o doador:</p>
+                                        <a href="tel:{{ item.contato }}" class="btn btn-outline-success-custom w-100 fw-bold py-2" style="border-radius: 30px; font-size: 0.9rem;">
+                                            📞 {{ item.contato or '(87) 99999-9999' }}
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+              {% else %}
+                    <!-- Estado Vazio -->
+                    <div class="col-12 text-center my-5 py-5 bg-white rounded-4 border shadow-sm" style="max-width: 650px; margin: 0 auto;">
+                        <div class="mb-4 text-warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" class="bi bi-box-seam text-success-dark opacity-75" viewBox="0 0 16 16">
+                                <path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.962L10.404 2l-2.218-.887zm3.564 1.426L5.596 5 8 5.961 14.154 3.5l-2.404-.961zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.722V6.838L1 4.239v7.923l6.5 2.56zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464L7.443.184z"/>
+                            </svg>
+                        </div>
+                        <h3 class="fw-bold text-success-dark mb-2">Nenhum item disponível no momento!</h3>
+                        <p class="text-muted fs-5 px-4 mb-4">Agradecemos o seu interesse. Nosso estoque é atualizado constantemente por nossos doadores locais. Por favor, volte a verificar mais tarde!</p>
+                        <a href="{{ url_for('index') }}" class="btn btn-success-custom fw-bold px-4 py-2 rounded-pill shadow-sm">Voltar ao Início</a>
+                    </div>
+              {% endfor %}
+            </div>
+
+        {% else %}
+            <!-- Acesso Restrito para Deslogados -->
+            <div class="card shadow-sm border-0 p-5 text-center bg-white rounded-4 border" style="max-width: 500px; margin: 40px auto;">
+                <div class="mb-3 text-success-dark">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="currentColor" class="bi bi-shield-lock-fill" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.777 11.777 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7.158 7.158 0 0 0 1.048-.625 11.775 11.775 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.541 1.541 0 0 0-1.044-1.263 62.439 62.439 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm0 5a1.5 1.5 0 0 1 .5 2.915l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99A1.5 1.5 0 0 1 8 5z"/>
+                    </svg>
+                </div>
+                <h3 class="fw-bold text-success-dark">Acesso Restrito</h3>
+                <p class="text-muted fs-5 mb-4">Sua instituição ou ONG precisa estar logada para acessar e solicitar suprimentos.</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-success-custom btn-lg rounded-3 fw-bold py-3 shadow-sm">Fazer Login</a>
+                    <a href="{{ url_for('auth.cadastrar') }}" class="btn btn-outline-success-custom btn-lg rounded-3 fw-bold py-3">Cadastrar ONG</a>
+                </div>
+                <a href="{{ url_for('index') }}" class="btn btn-link text-decoration-none text-secondary mt-3 fw-semibold">Voltar para o início</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="text-center py-4 text-muted bg-white border-top mt-auto">
+        <p class="mb-0">&copy; 2026 Estoque Solidário - Unindo forças contra a fome e o desperdício.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

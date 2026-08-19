@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sobre Nós - Estoque Solidário</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Estrutura flexível para empurrar o rodapé para a base */
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            background-color: #f8f9fa;
+        }
+        main {
+            flex: 1 0 auto;
+        }
+        footer {
+            flex-shrink: 0;
+        }
+        /* Ajuste de contraste para o card verde */
+        .card-verde-solidario {
+            background-color: #1e4620 !important; /* Verde escuro idêntico à identidade */
+            color: #ffffff !important;
+            border-radius: 24px;
+        }
+        .card-verde-solidario p {
+            color: #e2ebd5 !important; /* Tom claro de verde para excelente leitura */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="d-flex flex-column justify-content-center align-items-center position-relative topo-moderno-menor py-4 bg-white border-bottom">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <a href="{{ url_for('index') }}" class="text-decoration-none">
+                <h3 class="fw-bold m-0 text-success-dark">Estoque Solidário</h3>
+            </a>
+            <div class="d-flex align-items-center gap-4">
+                <a class="nav-link text-success-dark fw-bold active" href="{{ url_for('sobre') }}">Sobre Nós</a>
+                <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('doacoes.listar_doacoes') }}">Itens Disponíveis</a>
+                
+                {% if current_user.is_authenticated %}
+                    {% if current_user.tipo == 'mercado' %}
+                        <a class="nav-link text-success-dark fw-semibold position-relative" href="{{ url_for('pedidos.meus_pedidos') }}">
+                            Pedidos Recebidos
+                            {% if contagem_novos_pedidos and contagem_novos_pedidos > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger badge-alerta-pisca">
+                                {{ contagem_novos_pedidos }}
+                            </span>
+                            {% endif %}
+                        </a>
+                        <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('doacoes.minhas_doacoes') }}">Meus Itens</a>
+                    {% else %}
+                        <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('pedidos.meus_pedidos') }}">Meus Pedidos</a>
+                    {% endif %}
+
+                    <a href="{{ url_for('perfil') }}" class="btn btn-outline-success-custom btn-sm rounded-pill px-3 fw-semibold">
+                        <span class="me-1">👤</span>{{ current_user.username }}
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Sair</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="nav-link text-success-dark fw-semibold">Entrar</a>
+                    <a href="{{ url_for('auth.cadastrar') }}" class="btn btn-success-custom btn-sm rounded-pill px-4 fw-bold shadow-sm">Registrar-se</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="faixa-verde shadow-sm text-center py-1"></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="container mt-3">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <main class="container my-5" style="max-width: 950px;">
+        
+        <div class="p-5 mb-5 bg-white rounded-4 shadow-sm border text-center">
+            <div class="py-2">
+                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold mb-3">Quem Somos</span>
+                <h1 class="display-5 fw-extrabold text-success-dark mb-3">Nossa Missão é Compartilhar o bem</h1>
+                <p class="col-md-10 mx-auto fs-5 text-secondary">
+                    O <strong>Estoque Solidário</strong> nasceu para unir quem tem algo a compartilhar com quem mais precisa. Agora, conectamos pessoas, famílias e empresas de todo jeito: seja com alimentos, roupas, materiais de limpeza, produtos de higiene, itens para casa, brinquedos ou tudo o que pode fazer a diferença. Toda doação ganha um novo propósito e chega com carinho a quem realmente precisa.
+                </p>
+            </div>
+        </div>
+
+        <div class="row align-items-stretch g-4 mb-4">
+            <div class="col-md-6">
+                <div class="h-100 p-5 card-verde-solidario d-flex flex-column justify-content-between shadow-sm">
+                    <div>
+                        <h3 class="fw-bold mb-3 text-white">Doadores</h3>
+                        <p class="fs-6 mb-4">Qualquer pessoa ou empresa pode fazer o bem! Se você tem alimentos, roupas, produtos de higiene, materiais, móveis ou outros itens em bom estado que não usa mais, doe.
+🤝 Evite o desperdício e transforme o que você tem em esperança para muitas famílias. Cadastre sua doação aqui de forma simples, rápida e segura — e veja exatamente para quem ela vai chegar.</p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('doacoes.cadastrar_doacao') }}" class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold w-100">Quero Fazer uma Doação</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="h-100 p-5 bg-white border d-flex flex-column justify-content-between shadow-sm" style="border-radius: 24px;">
+                    <div>
+                        <h3 class="fw-bold text-success-dark mb-3">Para ONGs (Receptores)</h3>
+                        <p class="text-secondary fs-6 mb-4">Encontre todo tipo de suprimento que sua instituição precisa: alimentos, materiais, produtos e muito mais, disponíveis na sua região. Tudo de forma fácil, rápida e transparente.
+📦 Abasteça sua cozinha comunitária, complemente doações para famílias ou prepare ações sociais — tudo gratuitamente e com todo o apoio que você merece para continuar ajudando.</p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('doacoes.listar_doacoes') }}" class="btn btn-success-custom text-white rounded-pill px-4 py-2 fw-bold w-100 shadow-sm">Encontrar Doações Disponíveis</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center text-md-start">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary px-4 py-2 rounded-pill fw-bold">← Voltar ao Início</a>
+        </div>
+    </main>
+
+    <footer class="text-center py-4 text-muted bg-white border-top">
+        <p class="mb-0">&copy; 2026 Estoque Solidário - Unindo forças contra a fome e o desperdício.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
