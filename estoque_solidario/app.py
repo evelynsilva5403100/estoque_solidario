@@ -6,9 +6,9 @@ from modelos import db, login_manager, Item, Usuario, Pedido
 from auxiliares import limpar_itens_vencidos
 
 # Importa os Blueprints
-from auth import auth_bp
-from doacoes import doacoes_bp
-from pedidos import pedidos_bp
+from routes.auth import auth_bp
+from routes.doacoes import doacoes_bp
+from routes.pedidos import pedidos_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui' #protege a sessão dos usuários contra a adulteração
