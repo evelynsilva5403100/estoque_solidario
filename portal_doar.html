@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if item %}Editar Doação{% else %}Cadastrar Doação{% endif %} - Estoque Solidário</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+    <!-- Navbar -->
+    <div class="py-3 bg-white border-bottom shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <a href="{{ url_for('index') }}" class="text-decoration-none">
+                <h3 class="fw-bold m-0 text-success">Estoque Solidário</h3>
+            </a>
+            <div class="d-flex align-items-center flex-wrap gap-3">
+                <a class="nav-link text-secondary fw-semibold" href="{{ url_for('sobre') }}">Sobre Nós</a>
+                <a class="nav-link text-secondary fw-semibold" href="{{ url_for('doacoes.portal_receber') if 'portal_receber' in url_for.__globals__ else url_for('index') }}">Itens Disponíveis</a>
+                
+                {% if current_user.is_authenticated %}
+                    {% if current_user.tipo == 'mercado' %}
+                        <a class="nav-link text-secondary fw-semibold" href="{{ url_for('pedidos.meus_pedidos') }}">Pedidos</a>
+                        <a class="nav-link text-secondary fw-semibold" href="{{ url_for('doacoes.minhas_doacoes') }}">Meus Itens</a>
+                    {% else %}
+                        <a class="nav-link text-secondary fw-semibold" href="{{ url_for('pedidos.meus_pedidos') }}">Meus Pedidos</a>
+                    {% endif %}
+                    <span class="text-secondary mx-2">Olá, {{ current_user.username }}!</span>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Sair</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="nav-link text-secondary">Login</a>
+                    <a href="{{ url_for('auth.cadastrar') if 'cadastrar' in url_for.__globals__ else url_for('auth.login') }}" class="btn btn-warning btn-sm ms-2 rounded-pill px-3">Registrar-se</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="bg-success shadow-sm" style="height: 4px;"></div>
+
+    <div class="container my-auto py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-9 col-lg-7"> 
+                
+                <form action="{% if item %}{{ url_for('doacoes.editar', item_id=item.id) }}{% else %}{{ url_for('doacoes.doar') }}{% endif %}" 
+                      method="POST" 
+                      enctype="multipart/form-data" 
+                      class="shadow-sm p-4 p-sm-5 rounded-4 bg-white border needs-validation" 
+                      novalidate>
+                    
+                    {% set cat_atual = item.categoria if item else request.args.get('categoria', 'Alimento') %}
+                    <input type="hidden" name="categoria" value="{{ cat_atual }}">
+
+                    <h2 class="mb-2 text-center text-success fw-bold h3">
+                        {% if item %}Editar Doação de{% else %}Cadastrar Doação de{% endif %} 
+                        {% if cat_atual == 'Alimento' %}Alimentos{% elif cat_atual == 'Roupa' %}Agasalhos / Roupas{% else %}Utensílios{% endif %}
+                    </h2>
+                    <p class="text-muted text-center mb-4 small">Compartilhe o que você tem disponível para ajudar quem precisa.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Nome do Item*</label>
+                        <input type="text" name="nome" class="form-control rounded-3 py-2" required 
+                               value="{{ item.nome if item else '' }}"
+                               placeholder="Ex: {% if cat_atual == 'Alimento' %}Arroz, Leite...{% elif cat_atual == 'Roupa' %}Casaco, Cobertor...{% else %}Mesa, Fogão...{% endif %}">
+                        <div class="invalid-feedback">Por favor, informe o nome do item.</div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="{% if cat_atual == 'Alimento' %}col-md-7{% else %}col-12{% endif %}">
+                            <label class="form-label fw-bold text-secondary">Quantidade e Medida*</label>
+                            <div class="input-group">
+                                <input type="number" name="qtd" class="form-control rounded-start-3 py-2" min="1" step="1" required 
+                                       value="{{ item.qtd if item else '' }}" placeholder="Ex: 5">
+                                
+                                <select name="unidade" class="form-select bg-light text-secondary fw-semibold rounded-end-3" style="max-width: 145px;">
+                                    {% if cat_atual == 'Roupa' %}
+                                        <option value="peça" {% if item and (item.unidade == 'peça' or item.unidade == 'peca') %}selected{% elif not item %}selected{% endif %}>Peça(s)</option>
+                                        <option value="par" {% if item and item.unidade == 'par' %}selected{% endif %}>Par(es)</option>
+                                        <option value="kit" {% if item and item.unidade == 'kit' %}selected{% endif %}>Kit(s)</option>
+                                        <option value="fardo" {% if item and item.unidade == 'fardo' %}selected{% endif %}>Fardo/Sacola</option>
+                                    {% elif cat_atual == 'Alimento' %}
+                                        <option value="unidade" {% if item and item.unidade == 'unidade' %}selected{% elif not item %}selected{% endif %}>Unidade(s)</option>
+                                        <option value="kg" {% if item and item.unidade == 'kg' %}selected{% endif %}>Kg</option>
+                                        <option value="litro" {% if item and item.unidade == 'litro' %}selected{% endif %}>Litro(s)</option>
+                                        <option value="caixa" {% if item and item.unidade == 'caixa' %}selected{% endif %}>Caixa(s)</option>
+                                        <option value="pacote" {% if item and item.unidade == 'pacote' %}selected{% endif %}>Pacote(s)</option>
+                                    {% else %}
+                                        <option value="unidade" {% if item and item.unidade == 'unidade' %}selected{% elif not item %}selected{% endif %}>Unidade(s)</option>
+                                        <option value="kit" {% if item and item.unidade == 'kit' %}selected{% endif %}>Kit/Conjunto</option>
+                                    {% endif %}
+                                </select>
+                                <div class="invalid-feedback">Informe uma quantidade válida.</div>
+                            </div>
+                        </div>
+
+                        {% if cat_atual == 'Alimento' %}
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-secondary">Data de Validade*</label>
+                            <input type="date" name="validade" id="campoValidade" class="form-control rounded-3 py-2" required value="{{ item.validade if item else '' }}">
+                            <div class="invalid-feedback">Selecione uma data de validade.</div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Foto do Produto (Opcional)</label>
+                        <input type="file" name="imagem" class="form-control rounded-3" accept="image/*">
+                        <div class="form-text text-muted small">
+                            {% if item and item.imagem and item.imagem != 'sem-foto.png' %}
+                                Já existe uma foto salva. Envie outra apenas se desejar alterá-la.
+                            {% else %}
+                                Formatos aceitos: JPG, JPEG ou PNG.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4 text-muted">
+                    <h5 class="text-success fw-bold mb-3 h6">Localização para Retirada</h5>
+                    
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary">Cidade*</label>
+                            <input type="text" name="cidade" class="form-control rounded-3 py-2" required 
+                                   value="{{ item.cidade if item else (current_user.cidade if current_user.cidade is defined else '') }}" 
+                                   placeholder="Ex: Garanhuns">
+                            <div class="invalid-feedback">Informe a cidade.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary">Bairro*</label>
+                            <input type="text" name="bairro" class="form-control rounded-3 py-2" required 
+                                   value="{{ item.bairro if item else (current_user.bairro if current_user.bairro is defined else '') }}" 
+                                   placeholder="Ex: Heliópolis">
+                            <div class="invalid-feedback">Informe o bairro.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Rua e Número*</label>
+                        <input type="text" name="rua_numero" class="form-control rounded-3 py-2" required 
+                               value="{{ item.rua_numero if item else '' }}" 
+                               placeholder="Ex: Avenida Rui Barbosa, 123">
+                        <div class="invalid-feedback">Informe o endereço completo para retirada.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Contato*</label>
+                        <input type="tel" name="contato" id="contato" maxlength="15" class="form-control rounded-3 py-2" required 
+                               value="{{ item.contato if item else (current_user.telefone if current_user.telefone is defined else '') }}" 
+                               placeholder="(00) 00000-0000">
+                        <div class="invalid-feedback">Informe um telefone de contato válido.</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 btn-lg rounded-3 fw-bold mt-3 py-3 shadow-sm">
+                        {% if item %}Salvar Alterações{% else %}Confirmar Doação{% endif %}
+                    </button>
+                    
+                    <div class="mt-3 text-center">
+                        <a href="{{ url_for('doacoes.doar') }}" class="btn btn-link text-decoration-none text-secondary fw-semibold small">Voltar às Categorias</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-4 text-muted bg-white border-top mt-auto">
+        <p class="mb-0 small">&copy; 2026 Estoque Solidário - Unindo forças contra a fome e o desperdício.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const campoValidade = document.getElementById('campoValidade');
+        if (campoValidade) {
+            const hoje = new Date().toISOString().split('T')[0];
+            campoValidade.setAttribute('min', hoje);
+        }
+
+        const inputContato = document.getElementById('contato');
+        if (inputContato) {
+            inputContato.addEventListener('input', (e) => {
+                let valor = e.target.value.replace(/\D/g, "");
+                if (valor.length > 0) valor = "(" + valor;
+                if (valor.length > 3) valor = valor.slice(0, 3) + ") " + valor.slice(3);
+                if (valor.length > 10) valor = valor.slice(0, 10) + "-" + valor.slice(10, 15);
+                e.target.value = valor;
+            });
+        }
+
+        (() => {
+            'use strict'
+            const forms = document.querySelectorAll('.needs-validation')
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+</body>
+</html>

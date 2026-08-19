@@ -1,0 +1,133 @@
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background-color: #f7faf8 !important;
+}
+
+.text-success-dark { color: #1c4226 !important; }
+
+/* --- MENU E CABEÇALHO --- */
+.topo-moderno {
+    min-height: 100px;
+    background-color: #ffffff;
+    border-bottom: 2px solid #edf2ee;
+    padding: 15px 5% 15px 5%; /* Alinha com o conteúdo */
+}
+
+.contentor-logo {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+.logo-grande {
+    max-width: 240px; /* Ajuste a largura ideal da sua logo aqui */
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0;
+}
+.btn-success-custom {
+    background-color: #2b613a !important;
+    border-color: #2b613a !important;
+    color: white !important;
+}
+.btn-outline-success-custom {
+    border-color: #2b613a !important;
+    color: #2b613a !important;
+    background-color: transparent;
+    transition: all 0.2s ease-in-out;
+}
+.btn-outline-success-custom:hover {
+    background-color: #2b613a !important;
+    color: white !important;
+}
+.faixa-verde { 
+    background-color: #2b613a;
+    height: 6px; /* Define a altura da faixa */
+}
+
+/* --- DIFERENCIAÇÃO DOADOR vs ONG --- */
+
+/* Painel Doador (Estilo Verde Soft) */
+.painel-doador {
+    background: #ffffff;
+    border-radius: 24px;
+    border: 2px solid #e1ebe3;
+    transition: transform 0.3s ease;
+}
+.painel-doador:hover {
+    transform: translateY(-5px);
+    border-color: #2b613a;
+}
+.cor-doador { color: #2b613a; }
+.icon-box-doador {
+    font-size: 2.5rem;
+    background-color: #edf7f0;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-doador-custom {
+    background-color: #2b613a !important;
+    color: white !important;
+}
+
+/* Painel ONG (Estilo Azul Soft) */
+.painel-ong {
+    background: #ffffff;
+    border-radius: 24px;
+    border: 2px solid #e2e8f0;
+    transition: transform 0.3s ease;
+}
+
+/* Força o SVG a ficar bem alinhado sem cortar os cantos */
+.icon-box-ong svg,
+.icon-box-doador svg {
+    display: block !important;
+    margin: 0 auto !important;
+    flex-shrink: 0;}
+
+.painel-ong:hover {
+    transform: translateY(-5px);
+    border-color: #1b5299;
+}
+.cor-ong { color: #1b5299; }
+.icon-box-ong {
+    font-size: 2.5rem;
+    background-color: #edf4fc;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-ong-custom {
+    background-color: #1b5299 !important;
+    color: white !important;
+}
+
+
+/* --- CARDS DE ITENS DISPONÍVEIS --- */
+.busca-moderna {
+    border-radius: 30px;
+    overflow: hidden;
+    border: 1px solid #e2ede5;
+}
+.card-item-entrega {
+    border-radius: 16px !important;
+    border: 1px solid #eef2ef;
+}
+
+/* --- NOVO: ANIMACAO DO ALERTA DE PEDIDOS --- */
+@keyframes pulsar {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.badge-alerta-pisca {
+    animation: pulsar 1.5s infinite;
+}
