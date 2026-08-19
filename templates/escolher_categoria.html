@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escolher Categoria - Estoque Solidário</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .card-categoria {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            text-decoration: none !important;
+        }
+        .card-categoria:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+        }
+        .icone-categoria {
+            font-size: 2.5rem;
+        }
+    </style>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+    <!-- MENU SUPERIOR / NAVBAR -->
+    <div class="d-flex flex-column justify-content-center align-items-center position-relative topo-moderno-menor py-4 bg-white border-bottom">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <a href="{{ url_for('index') }}" class="text-decoration-none">
+                <h3 class="fw-bold m-0 text-success-dark">Estoque Solidário</h3>
+            </a>
+            <div class="d-flex align-items-center gap-4">
+                <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('sobre') }}">Sobre Nós</a>
+                <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('doacoes.listar_doacoes') }}">Itens Disponíveis</a>
+                <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('pedidos.pedidos') }}">Pedidos Recebidos</a>
+                <a class="nav-link text-success-dark fw-bold active" href="{{ url_for('doacoes.minhas_doacoes') }}">Meus Itens</a>
+                
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('perfil') }}" class="btn btn-outline-success-custom btn-sm rounded-pill px-3 fw-semibold">
+                        👤 {{ current_user.username }}
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Sair</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="faixa-verde shadow-sm text-center py-1"></div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="container my-auto py-5">
+        <div class="text-center mb-5">
+            <h2 class="text-success-dark fw-extrabold display-6">O que você deseja doar hoje?</h2>
+            <p class="text-muted fs-5">Selecione uma das opções abaixo para prosseguir com o cadastro.</p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            
+            <!-- Opção: Alimentos -->
+            <div class="col-md-4">
+                <a href="{{ url_for('doacoes.doar') }}?categoria=Alimento" class="card h-100 border shadow-sm rounded-4 p-4 text-center card-categoria d-block bg-white text-decoration-none">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="icone-categoria mb-3">🍎</div>
+                            <h4 class="fw-bold text-success-dark mb-2">Alimentos</h4>
+                            <p class="text-muted small">Cestas básicas, arroz, feijão, macarrão, leite, enlatados e itens perecíveis dentro da validade.</p>
+                        </div>
+                        <div class="mt-4">
+                            <span class="btn btn-success-custom rounded-pill px-4 fw-bold text-white w-100 py-2">Doar Alimento</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Opção: Roupas -->
+            <div class="col-md-4">
+                <a href="{{ url_for('doacoes.doar') }}?categoria=Roupa" class="card h-100 border shadow-sm rounded-4 p-4 text-center card-categoria d-block bg-white text-decoration-none">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="icone-categoria mb-3">🧥</div>
+                            <h4 class="fw-bold text-success-dark mb-2">Roupas e Agasalhos</h4>
+                            <p class="text-muted small">Casacos, cobertores, calçados, roupas de frio ou de uso geral em bom estado de conservação.</p>
+                        </div>
+                        <div class="mt-4">
+                            <span class="btn btn-success-custom rounded-pill px-4 fw-bold text-white w-100 py-2">Doar Roupas</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Opção: Móveis/Utensílios -->
+            <div class="col-md-4">
+                <a href="{{ url_for('doacoes.doar') }}?categoria=Movel" class="card h-100 border shadow-sm rounded-4 p-4 text-center card-categoria d-block bg-white text-decoration-none">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="icone-categoria mb-3">📦</div>
+                            <h4 class="fw-bold text-success-dark mb-2">Móveis e Utensílios</h4>
+                            <p class="text-muted small">Eletrodomésticos, panelas, pratos, mesas, cadeiras e outros itens que possam estruturar um lar.</p>
+                        </div>
+                        <div class="mt-4">
+                            <span class="btn btn-success-custom rounded-pill px-4 fw-bold text-white w-100 py-2">Doar Utensílios</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+
+        <div class="mt-5 text-center">
+            <a href="{{ url_for('doacoes.minhas_doacoes') }}" class="btn btn-link text-muted text-decoration-none fw-semibold">
+                ← Voltar para Meus Itens
+            </a>
+        </div>
+    </div>
+
+    <!-- RODAPÉ -->
+    <footer class="text-center py-4 text-muted bg-white border-top mt-auto">
+        <p class="mb-0">&copy; 2026 Estoque Solidário - Unindo forças contra a fome e o desperdício.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

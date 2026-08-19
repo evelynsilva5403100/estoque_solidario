@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - Estoque Solidário</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .focus-caneta:focus {
+            background-color: #f8f9fa !important;
+            border-bottom: 2px solid #198754 !important;
+            box-shadow: none !important;
+            outline: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+    <div class="d-flex flex-column justify-content-center align-items-center position-relative topo-moderno-menor py-4 bg-white border-bottom">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <a href="{{ url_for('index') }}" class="text-decoration-none">
+                <h3 class="fw-bold m-0 text-success-dark">Estoque Solidário</h3>
+            </a>
+            <div class="d-flex align-items-center gap-4">
+                <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('sobre') }}">Sobre Nós</a>
+                <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('index', _anchor='vitrine-suprimentos') }}">Itens Disponíveis</a>
+                
+                {% if current_user.is_authenticated %}
+                    <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('pedidos.meus_pedidos') }}">
+                        {% if current_user.tipo == 'mercado' %}Pedidos Recebidos{% else %}Meus Pedidos{% endif %}
+                    </a>
+                    {% if current_user.tipo == 'mercado' %}
+                        <a class="nav-link text-success-dark fw-semibold" href="{{ url_for('doacoes.minhas_doacoes') }}">Meus Itens</a>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('perfil') }}" class="btn btn-outline-success-custom btn-sm rounded-pill px-3 fw-semibold active">👤 {{ current_user.username }}</a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Sair</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="faixa-verde shadow-sm text-center py-1"></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="container mt-3">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="container py-5 flex-grow-1">
+        
+        <div class="mb-4">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold">
+                ← Voltar ao Início
+            </a>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <!-- CORRIGIDO AQUI: Removido o prefixo 'auth.' se a rota for global, ou ajustado para o blueprint correto -->
+                    <form action="{{ url_for('atualizar_dados') }}" method="POST" id="formAtualizarDados">
+                        
+                        <div class="text-center mb-4">
+                            <div class="avatar-circle mx-auto mb-3 bg-success-subtle text-success d-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; font-size: 2rem;">
+                                👤
+                            </div>
+                            
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                                <input type="text" name="nome_real" id="inputNomeReal" 
+                                       value="{{ current_user.nome if current_user.nome else current_user.username }}" 
+                                       class="form-control form-control-lg fw-bold text-center border-0 bg-transparent focus-caneta p-0 text-success-dark" 
+                                       style="max-width: 280px;" required title="Clique no lápis ao lado para editar o nome">
+                                
+                                <button type="button" id="btnEditarTopo" class="btn btn-sm btn-light rounded-circle shadow-sm p-1" title="Editar Nome">
+                                    ✏️
+                                </button>
+                            </div>
+
+                            <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-bold text-uppercase">
+                                {{ 'Doador' if current_user.tipo == 'mercado' else 'ONG / Instituição' }}
+                            </span>
+                        </div>
+
+                        <hr class="my-4 text-muted">
+
+                        <h5 class="fw-bold text-dark mb-3">Informações de Contato e Localização</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold">E-mail</label>
+                            <input type="email" name="email" class="form-control rounded-3 campo-editavel" value="{{ current_user.email if current_user.email else '' }}" disabled required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold">Telefone / WhatsApp</label>
+                            <input type="text" name="telefone" id="telefone" class="form-control rounded-3 campo-editavel" value="{{ current_user.telefone if current_user.telefone else '' }}" disabled required>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Cidade</label>
+                                <input type="text" name="cidade" class="form-control rounded-3 campo-editavel" value="{{ current_user.cidade if current_user.cidade else '' }}" disabled required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Bairro</label>
+                                <input type="text" name="bairro" class="form-control rounded-3 campo-editavel" value="{{ current_user.bairro if current_user.bairro else '' }}" disabled required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4" id="blocoAutorizacao">
+                            <button type="button" id="btnLiberarEdicao" class="btn btn-outline-success w-100 rounded-pill fw-bold py-2">
+                                🔒 Editar Informações de Cadastro
+                            </button>
+                            
+                            <div id="campoSenhaSeguranca" class="mt-3 p-3 bg-light rounded-3 d-none border">
+                                <label class="form-label text-dark small fw-bold">Confirme sua Senha Atual para Liberar a Edição:</label>
+                                <div class="input-group">
+                                    <input type="password" id="senhaVerificacao" class="form-control rounded-start-3" placeholder="Sua senha atual">
+                                    <button type="button" id="btnConfirmarSenha" class="btn btn-success rounded-end-3 fw-bold">Liberar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="senha_confirmacao" id="senhaConfirmacaoOculta">
+
+                        <button type="submit" id="btnSalvarDados" class="btn btn-success-custom w-100 rounded-pill fw-bold py-2.5 shadow-sm mb-3 d-none">
+                            💾 Salvar Alterações
+                        </button>
+
+                    </form>
+
+                    <hr class="my-4 text-muted">
+
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-dark mb-3">Segurança da Conta</h5>
+                        
+                        <button type="button" class="btn btn-outline-primary w-100 rounded-pill fw-bold py-2 mb-2" data-bs-toggle="collapse" data-bs-target="#collapseSenha">
+                            🔑 Alterar Senha
+                        </button>
+
+                        <div class="collapse mt-3" id="collapseSenha">
+                            <div class="card card-body border-0 bg-light rounded-3 p-3">
+                                <form action="{{ url_for('auth.alterar_senha') }}" method="POST">
+                                    <div class="mb-2">
+                                        <label class="form-label small text-muted">Senha Atual</label>
+                                        <input type="password" name="senha_atual" class="form-control form-control-sm" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted">Nova Senha (Mínimo 6 caracteres)</label>
+                                        <input type="password" name="nova_senha" class="form-control form-control-sm" minlength="6" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill fw-bold w-100">
+                                        Atualizar Senha
+                                    </button>
+                                </form>
+                                <div class="text-center mt-2">
+                                    <a href="{{ url_for('auth.esqueci_senha') }}" class="small text-decoration-none text-muted">Esqueceu a senha? Solicitar Token</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-top">
+                        <button type="button" class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-bold py-2" data-bs-toggle="modal" data-bs-target="#modalExcluirConta">
+                            🗑️ Excluir Minha Conta Permanentemente
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalExcluirConta" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-danger">⚠️ Atenção! Exclusão de Conta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center pt-2">
+                    <p class="text-muted mb-0">
+                        Esta ação é irreversível. Todos os seus itens cadastrados, pedidos e informações do perfil serão permanentemente excluídos.
+                    </p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <form action="{{ url_for('auth.excluir_perfil') }}" method="POST" class="w-100">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light rounded-pill w-50 fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger rounded-pill w-50 fw-bold">Confirmar Exclusão</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-4 text-muted bg-white border-top mt-auto">
+        <p class="mb-0">&copy; 2026 Estoque Solidário - Unindo forças contra a fome e o desperdício.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // MÁSCARA DE TELEFONE
+        const inputTelefone = document.getElementById('telefone');
+        if (inputTelefone) {
+            inputTelefone.addEventListener('input', (e) => {
+                let valor = e.target.value.replace(/\D/g, "");
+                if (valor.length > 0) valor = "(" + valor;
+                if (valor.length > 2) valor = valor.slice(0, 3) + ") " + valor.slice(3);
+                if (valor.length > 9) valor = valor.slice(0, 10) + "-" + valor.slice(10, 15);
+                e.target.value = valor;
+            });
+        }
+
+        // LÓGICA DO LÁPIS/CANETA NO NOME
+        const btnEditarTopo = document.getElementById('btnEditarTopo');
+        const inputNomeReal = document.getElementById('inputNomeReal');
+
+        if (btnEditarTopo && inputNomeReal) {
+            btnEditarTopo.addEventListener('click', function() {
+                inputNomeReal.focus();
+                let valor = inputNomeReal.value;
+                inputNomeReal.value = '';
+                inputNomeReal.value = valor;
+
+                document.getElementById('btnSalvarDados').classList.remove('d-none');
+            });
+
+            inputNomeReal.addEventListener('input', function() {
+                document.getElementById('btnSalvarDados').classList.remove('d-none');
+            });
+        }
+
+        // LÓGICA DE LIBERAÇÃO DOS DEMAIS CAMPOS (COM SENHA)
+        const btnLiberarEdicao = document.getElementById('btnLiberarEdicao');
+        if (btnLiberarEdicao) {
+            btnLiberarEdicao.addEventListener('click', function() {
+                document.getElementById('campoSenhaSeguranca').classList.remove('d-none');
+                this.classList.add('d-none'); 
+            });
+        }
+
+        const btnConfirmarSenha = document.getElementById('btnConfirmarSenha');
+        if (btnConfirmarSenha) {
+            btnConfirmarSenha.addEventListener('click', function() {
+                const senhaDigitada = document.getElementById('senhaVerificacao').value;
+                if (senhaDigitada.trim() === "") {
+                    alert("Por favor, digite sua senha.");
+                    return;
+                }
+                document.getElementById('senhaConfirmacaoOculta').value = senhaDigitada;
+                const campos = document.querySelectorAll('.campo-editavel');
+                campos.forEach(campo => campo.removeAttribute('disabled'));
+                document.getElementById('btnSalvarDados').classList.remove('d-none');
+                document.getElementById('blocoAutorizacao').classList.add('d-none');
+            });
+        }
+    </script>
+</body>
+</html>
